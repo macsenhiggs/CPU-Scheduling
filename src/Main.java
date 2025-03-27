@@ -3,6 +3,7 @@ import java.util.*;
 public class Main {
 
     public static void FCFS (Queue<Process> processQueue) {
+        System.out.println("FCS Execution: ");
         int time = 0; int totalWT = 0; int totalTAT = 0;
         int np = processQueue.size();
         while (!processQueue.isEmpty()) {

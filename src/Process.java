@@ -17,9 +17,4 @@ public class Process {
         this.priority = priority;
         this.ID = globalID++;
     }
-
-    @Override
-    public String toString() {
-        return "Process " + ID + " has burst " + burst + " and arrival time " + arrivalTime;
-    }
 }
