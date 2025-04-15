@@ -4,12 +4,11 @@ public class Process {
     public int remaining;
     public int WT;
     public int TAT;
-    public int last_execution_time;
     public final int priority;
     static int globalID;
     public final int ID;
 
-    public Process(int burst, int arrivalTime, int priority) {
+    public Process(int arrivalTime, int burst, int priority) {
         this.burst = burst;
         this.arrivalTime = arrivalTime;
         this.remaining = burst;
@@ -17,11 +16,9 @@ public class Process {
         this.TAT = 0;
         this.priority = priority;
         this.ID = globalID++;
-        this.last_execution_time = -1;
     }
 
     public void reset() {
-        this.last_execution_time = -1;
         this.WT = 0;
         this.TAT = 0;
         this.remaining = burst;
@@ -29,6 +26,6 @@ public class Process {
 
     @Override
     public String toString() {
-        return "P"+ID;
+        return "P "+ID+" arrives at "+arrivalTime+" with burst "+burst+" and priority "+priority;
     }
 }

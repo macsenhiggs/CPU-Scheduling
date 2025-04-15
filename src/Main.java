@@ -19,9 +19,11 @@ public class Main {
             totalWT += current.WT;
             totalTAT += current.TAT;
 
+            /*
             System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
                     ", BT=" + (current.TAT - current.WT) + ") executed at T=" +
                     (time - (current.TAT - current.WT)));
+             */
         }
         System.out.println("Avg WT: " + (float) totalWT/np);
         System.out.println("Avg TAT: " + (float) totalTAT/np);
@@ -49,9 +51,12 @@ public class Main {
 
                 time += current.burst;
                 current.remaining = 0;
+                /*
                 System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
                         ", BT=" + (current.TAT - current.WT) + ") executed at T=" +
                         (time - (current.TAT - current.WT)));
+
+                 */
                 completed++;
             } else {
                 //no ready processes yet, jump to next arrival time
@@ -63,19 +68,60 @@ public class Main {
         System.out.println("Avg TAT: " + (float) totalTAT/np);
     }
 
-    public static void Priority (LinkedList<Process>  processList) {
+    public static void Priority (Queue<Process>  processQueue) { //non-preemptive priority scheduling
         System.out.println("Priority Scheduling Execution:");
 
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+        int np = processQueue.size();
+
+        // Create a queue for processes that are currently in the ready state
+        Queue<Process> readyQueue = new LinkedList<>();
+
+        while (completed < np) {
+            //add all new arrivals anytime time is updated
+            while (!processQueue.isEmpty() && processQueue.peek().arrivalTime <= time) {
+                readyQueue.add(processQueue.poll());
+            }
+
+            if (!readyQueue.isEmpty()) {
+                //sort queue of ready processes by their priority
+                List<Process> sortedList = new ArrayList<>(readyQueue);
+                sortedList.sort(Comparator.comparingInt(p -> p.priority));
+                readyQueue.clear();
+                readyQueue.addAll(sortedList);
+
+                Process current = readyQueue.poll();
+
+                assert current != null;
+                time += current.burst;
+                current.TAT = time - current.arrivalTime;
+                current.WT = current.TAT - current.burst;
+                totalWT += current.WT; totalTAT += current.TAT;
+
+                current.remaining = 0;
+
+                /*
+                System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
+                        ", BT=" + (current.TAT - current.WT) + ") executed at T=" +
+                        (time - (current.TAT - current.WT)));
+                 */
+                completed++;
+
+            } else {
+                if (!processQueue.isEmpty()) {
+                    time = processQueue.peek().arrivalTime;
+                }
+            }
+        }
+
+        System.out.println("Avg WT: " + (float) totalWT / np);
+        System.out.println("Avg TAT: " + (float) totalTAT / np);
     }
 
-    public static void RoundRobin(Queue<Process> processQueue, int quantum) {
+    public static void RoundRobin(Queue<Process> processQueue, int quantum, boolean print) {
         System.out.println("Round Robin Execution:");
         System.out.println("Quantum = " + quantum);
-        int time = 0;
-        int totalWT = 0;
-        int totalBT = 0;
-        int totalTAT = 0;
-        int completed = 0;
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
         int np = processQueue.size();
 
         // Create a queue for processes that are currently in the ready state
@@ -94,26 +140,35 @@ public class Main {
                     current.TAT = time - current.arrivalTime;
                     current.WT = current.TAT - current.burst;
                     totalWT += current.WT;
-                    totalBT += current.burst;
                     totalTAT += current.TAT;
-                    System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                            ", BT=" + current.burst + ") finished at T=" + time);
+                    if (print) {
+                        System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
+                                ", BT=" + current.burst + ") finished at T=" + time);
+                    }
                     completed++;
                 } else {
-                    System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                            ", BT=" + current.burst + ") started at T=" + time);
+                    if (print) {
+                        System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
+                                ", BT=" + current.burst + ") started at T=" + time);
+                    }
                     current.remaining -= quantum;
                     time += quantum;
                     //add all new arrivals anytime time is updated
                     while (!processQueue.isEmpty() && processQueue.peek().arrivalTime <= time) {
                         readyQueue.add(processQueue.poll());
                     }
-                    System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                            ", BT=" + current.burst + ") paused at T=" +
-                            time + " with R=" + current.remaining);
+                    if (print) {
+                        System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
+                                ", BT=" + current.burst + ") paused at T=" +
+                                time + " with R=" + current.remaining);
+                    }
+
                     readyQueue.add(current); // Re-add the process back to the ready queue
                 }
-                System.out.println("Next in Queue: " + readyQueue);
+                if (print && !readyQueue.isEmpty()) {
+                    System.out.println("Next in Queue: " + readyQueue);
+                }
+
             } else {
                 // If no processes are ready, increment the time to the next arriving process
                 if (!processQueue.isEmpty()) {
@@ -128,7 +183,50 @@ public class Main {
 
         // Output average waiting time and turnaround time
         System.out.println("Avg WT: " + (float) totalWT / np);
-        System.out.println("Avg BT: " + (float) totalBT / np);
+        System.out.println("Avg TAT: " + (float) totalTAT / np);
+    }
+
+    //start of new algorithms
+
+    public static void STRF(Queue<Process> processQueue) {
+        System.out.println("STRF Execution:");
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+        int np = processQueue.size();
+
+        Queue<Process> readyQueue = new LinkedList<>();
+
+        while (completed < np) {
+            //add all ready processes to queue
+            while (!processQueue.isEmpty() && processQueue.peek().arrivalTime <= time) {
+                readyQueue.add(processQueue.poll());
+            }
+
+            if (!readyQueue.isEmpty()) {
+                List<Process> sortedList = new ArrayList<>(readyQueue);
+                sortedList.sort(Comparator.comparingInt(p -> p.remaining));
+                readyQueue.clear();
+                readyQueue.addAll(sortedList);
+
+                Process current = readyQueue.poll();
+
+                assert current != null;
+                current.remaining--;
+                time++;
+
+                if (current.remaining <= 0) {
+                    completed++;
+                    current.TAT = time - current.arrivalTime;
+                    current.WT = current.TAT - current.burst;
+                    totalWT += current.WT; totalTAT += current.TAT;
+                } else {
+                    readyQueue.add(current);
+                }
+
+            } else {
+                time++;
+            }
+        }
+        System.out.println("Avg WT: " + (float) totalWT / np);
         System.out.println("Avg TAT: " + (float) totalTAT / np);
     }
 
@@ -141,24 +239,48 @@ public class Main {
     public static void main(String[] args) {
         Random rand = new Random();
         LinkedList<Process> processList = new LinkedList<>();
-        for (int i = 0; i < 20; i++) {
-            int arrivalTime = rand.nextInt(100) + 1;
-            int burst = rand.nextInt(20) + 1;
+
+        int n = 50;
+        int totalBT = 0;
+
+        for (int i = 0; i < n; i++) {
+            //int arrivalTime = rand.nextInt(100) + 1;
+            //int burst = rand.nextInt(20) + 1;
+
+            int arrivalTime = (i < n/10) ? 0 : rand.nextInt(10) + 1; // Few big jobs early, rest arrive soon after
+            int burst = (i < n/10) ? rand.nextInt(40) + 30 : rand.nextInt(10) + 1; // First 5 are long, rest are short
+
+            totalBT += burst;
+
             int priority = rand.nextInt(3) + 1;
-            processList.add(new Process(burst, arrivalTime, priority));
+            Process p = new Process(arrivalTime, burst, priority);
+            System.out.println(p);
+            processList.add(p);
+
+
         }
 
-        processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
-        Queue<Process> processQueue = new LinkedList<>(processList);
+        System.out.println("Generated " + n  + " processes with average BT of " + (float) totalBT/n);
 
+        processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
+
+        System.out.println("Solving processes with originally provided methods");
 
         FCFS(new LinkedList<>(processList));
         resetProcesses(processList);
+
         SJF(processList);
         resetProcesses(processList);
-        //Priority(processList);
-        //resetProcesses(processList);
-        int quantum = rand.nextInt(10) + 1;
-        RoundRobin(processQueue, quantum);
+
+        int quantum = rand.nextInt(5) + 5;
+        RoundRobin(new LinkedList<>(processList), quantum, false);
+        resetProcesses(processList);
+
+        Priority(new LinkedList<>(processList));
+        resetProcesses(processList);
+
+        System.out.println("\nSolving processes with new methods");
+        STRF(new LinkedList<>(processList));
+
     }
 }
