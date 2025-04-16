@@ -25,8 +25,8 @@ public class Main {
                     (time - (current.TAT - current.WT)));
              */
         }
-        System.out.println("Avg WT: " + (float) totalWT/np);
-        System.out.println("Avg TAT: " + (float) totalTAT/np);
+        System.out.println("Avg WT: " + (double) totalWT/np);
+        System.out.println("Avg TAT: " + (double) totalTAT/np);
     }
 
     public static void SJF (LinkedList<Process> processList) { //non-preemptive SJF algorithm
@@ -64,8 +64,8 @@ public class Main {
                         .mapToInt(p -> p.arrivalTime).min().orElse(time);
             }
         }
-        System.out.println("Avg WT: " + (float) totalWT/np);
-        System.out.println("Avg TAT: " + (float) totalTAT/np);
+        System.out.println("Avg WT: " + (double) totalWT/np);
+        System.out.println("Avg TAT: " + (double) totalTAT/np);
     }
 
     public static void Priority (Queue<Process>  processQueue) { //non-preemptive priority scheduling
@@ -114,8 +114,8 @@ public class Main {
             }
         }
 
-        System.out.println("Avg WT: " + (float) totalWT / np);
-        System.out.println("Avg TAT: " + (float) totalTAT / np);
+        System.out.println("Avg WT: " + (double) totalWT / np);
+        System.out.println("Avg TAT: " + (double) totalTAT / np);
     }
 
     public static void RoundRobin(Queue<Process> processQueue, int quantum, boolean print) {
@@ -182,8 +182,8 @@ public class Main {
         }
 
         // Output average waiting time and turnaround time
-        System.out.println("Avg WT: " + (float) totalWT / np);
-        System.out.println("Avg TAT: " + (float) totalTAT / np);
+        System.out.println("Avg WT: " + (double) totalWT / np);
+        System.out.println("Avg TAT: " + (double) totalTAT / np);
     }
 
     //start of new algorithms
@@ -226,8 +226,54 @@ public class Main {
                 time++;
             }
         }
-        System.out.println("Avg WT: " + (float) totalWT / np);
-        System.out.println("Avg TAT: " + (float) totalTAT / np);
+        System.out.println("Avg WT: " + (double) totalWT / np);
+        System.out.println("Avg TAT: " + (double) totalTAT / np);
+    }
+
+    public static void HighestResponseRatioNext(Queue<Process> processQueue) {
+        System.out.println("Highest Response Ratio First Execution:");
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+        int np = processQueue.size();
+
+        Queue<Process> readyQueue = new LinkedList<>();
+
+        while (completed < np) {
+            while (!processQueue.isEmpty() && processQueue.peek().arrivalTime <= time) {
+                readyQueue.add(processQueue.poll());
+            }
+
+            if (!readyQueue.isEmpty()) {
+                for (Process p : readyQueue) {
+                    p.updateWT(time);
+                    p.updateResponseRatio();
+                }
+
+                List<Process> sortedList = new ArrayList<>(readyQueue);
+                sortedList.sort(Comparator.comparingDouble(p -> -p.responseRatio));
+                readyQueue.clear();
+                readyQueue.addAll(sortedList);
+
+                Process current = readyQueue.poll();
+
+                assert current != null;
+
+                time += current.burst;
+                current.TAT = time - current.arrivalTime;
+                current.WT = current.TAT - current.burst;
+                totalWT += current.WT; totalTAT += current.TAT;
+
+                current.remaining = 0;
+
+                completed++;
+            } else {
+                if (!processQueue.isEmpty()) {
+                    time = processQueue.peek().arrivalTime;
+                }
+            }
+        }
+
+        System.out.println("Avg WT: " + (double) totalWT / np);
+        System.out.println("Avg TAT: " + (double) totalTAT / np);
     }
 
     public static void resetProcesses(LinkedList<Process> processList) {
@@ -260,7 +306,7 @@ public class Main {
 
         }
 
-        System.out.println("Generated " + n  + " processes with average BT of " + (float) totalBT/n);
+        System.out.println("Generated " + n  + " processes with average BT of " + (double) totalBT/n);
 
         processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
@@ -281,6 +327,9 @@ public class Main {
 
         System.out.println("\nSolving processes with new methods");
         STRF(new LinkedList<>(processList));
+        resetProcesses(processList);
 
+        HighestResponseRatioNext(new LinkedList<>(processList));
+        resetProcesses(processList);
     }
 }
