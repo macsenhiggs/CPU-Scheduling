@@ -1,15 +1,19 @@
 import java.util.*;
+import org.apache.commons.math3.distribution.BetaDistribution;
+
 
 public class Main {
 
     public static void FCFS (Queue<Process> processQueue) {
         System.out.println("FCFS Execution: ");
-        int time = 0; int totalWT = 0; int totalTAT = 0;
+        int time = 0; int totalWT = 0; int totalTAT = 0; int timeWasted = 0;
         int np = processQueue.size();
         while (!processQueue.isEmpty()) {
             Process current = processQueue.poll();
             if (time <  current.arrivalTime) {
+                int oldTime = time;
                 time = current.arrivalTime;
+                timeWasted += time - oldTime;
             }
 
             time += current.burst;
@@ -18,20 +22,13 @@ public class Main {
             current.TAT = current.WT + current.burst;
             totalWT += current.WT;
             totalTAT += current.TAT;
-
-            /*
-            System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                    ", BT=" + (current.TAT - current.WT) + ") executed at T=" +
-                    (time - (current.TAT - current.WT)));
-             */
         }
-        System.out.println("Avg WT: " + (double) totalWT/np);
-        System.out.println("Avg TAT: " + (double) totalTAT/np);
+        Recap(totalWT, totalTAT,time, timeWasted, np);
     }
 
     public static void SJF (LinkedList<Process> processList) { //non-preemptive SJF algorithm
         System.out.println("SJF Execution:");
-        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processList.size();
         while (completed < np) {
             List<Process> availableProcesses = new ArrayList<>();
@@ -51,27 +48,22 @@ public class Main {
 
                 time += current.burst;
                 current.remaining = 0;
-                /*
-                System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                        ", BT=" + (current.TAT - current.WT) + ") executed at T=" +
-                        (time - (current.TAT - current.WT)));
-
-                 */
                 completed++;
             } else {
                 //no ready processes yet, jump to next arrival time
+                int oldTime = time;
                 time = processList.stream().filter(p -> p.remaining > 0)
                         .mapToInt(p -> p.arrivalTime).min().orElse(time);
+                timeWasted += time - oldTime;
             }
         }
-        System.out.println("Avg WT: " + (double) totalWT/np);
-        System.out.println("Avg TAT: " + (double) totalTAT/np);
+        Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
     public static void Priority (Queue<Process>  processQueue) { //non-preemptive priority scheduling
         System.out.println("Priority Scheduling Execution:");
 
-        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
         // Create a queue for processes that are currently in the ready state
@@ -99,29 +91,24 @@ public class Main {
                 totalWT += current.WT; totalTAT += current.TAT;
 
                 current.remaining = 0;
-
-                /*
-                System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                        ", BT=" + (current.TAT - current.WT) + ") executed at T=" +
-                        (time - (current.TAT - current.WT)));
-                 */
                 completed++;
 
             } else {
                 if (!processQueue.isEmpty()) {
+                    int oldTime = time;
                     time = processQueue.peek().arrivalTime;
+                    timeWasted += time - oldTime;
                 }
             }
         }
 
-        System.out.println("Avg WT: " + (double) totalWT / np);
-        System.out.println("Avg TAT: " + (double) totalTAT / np);
+        Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static void RoundRobin(Queue<Process> processQueue, int quantum, boolean print) {
+    public static void RoundRobin(Queue<Process> processQueue, int quantum) {
         System.out.println("Round Robin Execution:");
         System.out.println("Quantum = " + quantum);
-        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
         // Create a queue for processes that are currently in the ready state
@@ -141,38 +128,24 @@ public class Main {
                     current.WT = current.TAT - current.burst;
                     totalWT += current.WT;
                     totalTAT += current.TAT;
-                    if (print) {
-                        System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                                ", BT=" + current.burst + ") finished at T=" + time);
-                    }
                     completed++;
                 } else {
-                    if (print) {
-                        System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                                ", BT=" + current.burst + ") started at T=" + time);
-                    }
                     current.remaining -= quantum;
                     time += quantum;
                     //add all new arrivals anytime time is updated
                     while (!processQueue.isEmpty() && processQueue.peek().arrivalTime <= time) {
                         readyQueue.add(processQueue.poll());
                     }
-                    if (print) {
-                        System.out.println("P" + current.ID + " (AT=" + current.arrivalTime +
-                                ", BT=" + current.burst + ") paused at T=" +
-                                time + " with R=" + current.remaining);
-                    }
 
                     readyQueue.add(current); // Re-add the process back to the ready queue
-                }
-                if (print && !readyQueue.isEmpty()) {
-                    System.out.println("Next in Queue: " + readyQueue);
                 }
 
             } else {
                 // If no processes are ready, increment the time to the next arriving process
                 if (!processQueue.isEmpty()) {
+                    int oldTime = time;
                     time = processQueue.peek().arrivalTime;
+                    timeWasted += time - oldTime;
                 }
                 //add all new arrivals anytime time is updated
                 while (!processQueue.isEmpty() && processQueue.peek().arrivalTime <= time) {
@@ -181,16 +154,14 @@ public class Main {
             }
         }
 
-        // Output average waiting time and turnaround time
-        System.out.println("Avg WT: " + (double) totalWT / np);
-        System.out.println("Avg TAT: " + (double) totalTAT / np);
+        Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
     //start of new algorithms
 
     public static void STRF(Queue<Process> processQueue) {
         System.out.println("STRF Execution:");
-        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
         Queue<Process> readyQueue = new LinkedList<>();
@@ -202,6 +173,7 @@ public class Main {
             }
 
             if (!readyQueue.isEmpty()) {
+
                 List<Process> sortedList = new ArrayList<>(readyQueue);
                 sortedList.sort(Comparator.comparingInt(p -> p.remaining));
                 readyQueue.clear();
@@ -224,15 +196,15 @@ public class Main {
 
             } else {
                 time++;
+                timeWasted++;
             }
         }
-        System.out.println("Avg WT: " + (double) totalWT / np);
-        System.out.println("Avg TAT: " + (double) totalTAT / np);
+        Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static void HighestResponseRatioNext(Queue<Process> processQueue) {
-        System.out.println("Highest Response Ratio First Execution:");
-        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0;
+    public static void HighestResponseRatioNext(Queue<Process> processQueue) { //non-preemptive HRRN algorithm
+        System.out.println("Highest Response Ratio Next Execution:");
+        int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
         Queue<Process> readyQueue = new LinkedList<>();
@@ -246,6 +218,7 @@ public class Main {
                 for (Process p : readyQueue) {
                     p.updateWT(time);
                     p.updateResponseRatio();
+                    //System.out.println(p + " - " + p.responseRatio);
                 }
 
                 List<Process> sortedList = new ArrayList<>(readyQueue);
@@ -254,6 +227,7 @@ public class Main {
                 readyQueue.addAll(sortedList);
 
                 Process current = readyQueue.poll();
+                //System.out.println("t = " + time + " - Selected process " + current.ID + " with response ratio " + current.responseRatio);
 
                 assert current != null;
 
@@ -267,13 +241,22 @@ public class Main {
                 completed++;
             } else {
                 if (!processQueue.isEmpty()) {
+                    int oldTime = time;
                     time = processQueue.peek().arrivalTime;
+                    timeWasted += time - oldTime;
                 }
             }
         }
 
-        System.out.println("Avg WT: " + (double) totalWT / np);
-        System.out.println("Avg TAT: " + (double) totalTAT / np);
+        Recap(totalWT,totalTAT,time,timeWasted,np);
+    }
+
+    public static void Recap(int totalWT, int totalTAT, int time, int timeWasted, int np) {
+        System.out.println("Avg WT: " + (double) totalWT/np);
+        System.out.println("Avg TAT: " + (double) totalTAT/np);
+        double UtilizationPCT = ((double) (time - timeWasted) / time) * 100;
+        System.out.println("CPU Utilization: " + Math.round(UtilizationPCT * 100.0) / 100.0 + "%");
+        System.out.println("Throughput: " + (float) np/time + " processes/second");
     }
 
     public static void resetProcesses(LinkedList<Process> processList) {
@@ -282,31 +265,76 @@ public class Main {
         }
     }
 
+    public static void BurstSummary(LinkedList<Process> processList) {
+        processList.sort(Comparator.comparingInt(p -> p.burst));
+        int n = processList.size();
+        int min = processList.get(0).burst;
+        int q1 = processList.get(n/4).burst;
+        int med = processList.get(n/2).burst;
+        int q3 = processList.get(3*n/4).burst;
+        int max = processList.get(n - 1).burst;
+        System.out.printf("""
+                5-Number Summary of Process Bursts:
+                min: %d
+                q1: %d
+                med: %d
+                q3: %d
+                max: %d
+                
+                """,min, q1, med, q3, max);
+    }
+
+    public static void ATSummary(LinkedList<Process> processList) {
+        processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
+        int n = processList.size();
+        int min = processList.get(0).arrivalTime;
+        int q1 = processList.get(n/4).arrivalTime;
+        int med = processList.get(n/2).arrivalTime;
+        int q3 = processList.get(3*n/4).arrivalTime;
+        int max = processList.get(n - 1).arrivalTime;
+        System.out.printf("""
+                5-Number Summary of Process Arrival Times:
+                min: %d
+                q1: %d
+                med: %d
+                q3: %d
+                max: %d
+                
+                """,min, q1, med, q3, max);
+    }
+
     public static void main(String[] args) {
         Random rand = new Random();
         LinkedList<Process> processList = new LinkedList<>();
 
-        int n = 50;
+        int n = 40;
         int totalBT = 0;
 
-        for (int i = 0; i < n; i++) {
-            //int arrivalTime = rand.nextInt(100) + 1;
-            //int burst = rand.nextInt(20) + 1;
+        BetaDistribution betaAT = new BetaDistribution(3,2);
+        BetaDistribution betaBurst = new BetaDistribution(2,5);
 
-            int arrivalTime = (i < n/10) ? 0 : rand.nextInt(10) + 1; // Few big jobs early, rest arrive soon after
-            int burst = (i < n/10) ? rand.nextInt(40) + 30 : rand.nextInt(10) + 1; // First 5 are long, rest are short
+        int arrivalTime; int burst;
+        for (int i = 0; i < n; i++) {
+            if (i < n/5) {
+                arrivalTime = (int) Math.round(betaAT.sample() * 5);
+                burst = (int) Math.round(50 + betaBurst.sample() * 250);
+            } else {
+                arrivalTime = (int) Math.round(20 + betaAT.sample() * 80);
+                burst = (int) Math.round(betaBurst.sample() * 50);
+            }
 
             totalBT += burst;
 
             int priority = rand.nextInt(3) + 1;
             Process p = new Process(arrivalTime, burst, priority);
-            System.out.println(p);
+            //System.out.println(p);
             processList.add(p);
-
 
         }
 
         System.out.println("Generated " + n  + " processes with average BT of " + (double) totalBT/n);
+        BurstSummary(processList);
+        ATSummary(processList);
 
         processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
@@ -319,7 +347,7 @@ public class Main {
         resetProcesses(processList);
 
         int quantum = rand.nextInt(5) + 5;
-        RoundRobin(new LinkedList<>(processList), quantum, false);
+        RoundRobin(new LinkedList<>(processList), quantum);
         resetProcesses(processList);
 
         Priority(new LinkedList<>(processList));

@@ -12,19 +12,19 @@ public class Process {
     public Process(int arrivalTime, int burst, int priority) {
         this.burst = burst;
         this.arrivalTime = arrivalTime;
-        this.remaining = burst;
-        this.WT = 0;
-        this.TAT = 0;
         this.priority = priority;
-        this.responseRatio = 1.0f;
-        this.ID = globalID++;
+        remaining = burst;
+        WT = 0;
+        TAT = 0;
+        responseRatio = 1.0d;
+        ID = globalID++;
     }
 
     public void reset() {
-        this.WT = 0;
-        this.TAT = 0;
-        this.responseRatio = 1.0f;
-        this.remaining = burst;
+        WT = 0;
+        TAT = 0;
+        responseRatio = 1.0d;
+        remaining = burst;
     }
 
     @Override
@@ -33,10 +33,11 @@ public class Process {
     }
 
     public void updateWT(int time) {
-        this.WT = time - this.arrivalTime;
+        WT = time - arrivalTime;
     }
 
     public void updateResponseRatio() {
-        this.responseRatio = (1 +  (double) this.WT/this.burst);
+        responseRatio = (1 +  (double) WT/burst);
     }
+
 }
