@@ -1,5 +1,4 @@
 import java.util.*;
-import org.apache.commons.math3.distribution.BetaDistribution;
 
 
 public class Main {
@@ -26,13 +25,13 @@ public class Main {
         Recap(totalWT, totalTAT,time, timeWasted, np);
     }
 
-    public static void SJF (LinkedList<Process> processList) { //non-preemptive SJF algorithm
+    public static void SJF (Queue<Process> processQueue) { //non-preemptive SJF algorithm
         System.out.println("SJF Execution:");
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
-        int np = processList.size();
+        int np = processQueue.size();
         while (completed < np) {
             List<Process> availableProcesses = new ArrayList<>();
-            for (Process p  : processList) {
+            for (Process p  : processQueue) {
                 if (p.arrivalTime <= time && p.remaining > 0) {
                     availableProcesses.add(p);
                 }
@@ -52,7 +51,7 @@ public class Main {
             } else {
                 //no ready processes yet, jump to next arrival time
                 int oldTime = time;
-                time = processList.stream().filter(p -> p.remaining > 0)
+                time = processQueue.stream().filter(p -> p.remaining > 0)
                         .mapToInt(p -> p.arrivalTime).min().orElse(time);
                 timeWasted += time - oldTime;
             }
@@ -252,11 +251,12 @@ public class Main {
     }
 
     public static void Recap(int totalWT, int totalTAT, int time, int timeWasted, int np) {
-        System.out.println("Avg WT: " + (double) totalWT/np);
-        System.out.println("Avg TAT: " + (double) totalTAT/np);
-        double UtilizationPCT = ((double) (time - timeWasted) / time) * 100;
-        System.out.println("CPU Utilization: " + Math.round(UtilizationPCT * 100.0) / 100.0 + "%");
-        System.out.println("Throughput: " + (float) np/time + " processes/second");
+        float avgWT = (float) totalWT/np;
+        float avgTAT = (float) totalTAT/np;
+        float UtilizationPCT = (float) (Math.round(((float) (time - timeWasted) / time) * 100 * 100.0) / 100.0);
+        float throughput = (float) np/time;
+        System.out.printf("Avg WT: %.2f -- Avg TAT: %.2f -- Util%%: %.2f -- Throughput: %.4f%n",
+                avgWT, avgTAT, UtilizationPCT, throughput);
     }
 
     public static void resetProcesses(LinkedList<Process> processList) {
@@ -275,12 +275,7 @@ public class Main {
         int max = processList.get(n - 1).burst;
         System.out.printf("""
                 5-Number Summary of Process Bursts:
-                min: %d
-                q1: %d
-                med: %d
-                q3: %d
-                max: %d
-                
+                min: %d, q1: %d, med: %d, q3: %d, max: %d
                 """,min, q1, med, q3, max);
     }
 
@@ -294,51 +289,20 @@ public class Main {
         int max = processList.get(n - 1).arrivalTime;
         System.out.printf("""
                 5-Number Summary of Process Arrival Times:
-                min: %d
-                q1: %d
-                med: %d
-                q3: %d
-                max: %d
+                min: %d, q1: %d, med: %d, q3: %d, max: %d
                 
                 """,min, q1, med, q3, max);
     }
 
-    public static void main(String[] args) {
-        Random rand = new Random();
-        LinkedList<Process> processList = new LinkedList<>();
-
-        int n = 40;
-        int totalBT = 0;
-
-        BetaDistribution betaAT = new BetaDistribution(3,2);
-        BetaDistribution betaBurst = new BetaDistribution(2,5);
-
-        int arrivalTime; int burst;
-        for (int i = 0; i < n; i++) {
-            if (i < n/5) {
-                arrivalTime = (int) Math.round(betaAT.sample() * 5);
-                burst = (int) Math.round(50 + betaBurst.sample() * 250);
-            } else {
-                arrivalTime = (int) Math.round(20 + betaAT.sample() * 80);
-                burst = (int) Math.round(betaBurst.sample() * 50);
-            }
-
-            totalBT += burst;
-
-            int priority = rand.nextInt(3) + 1;
-            Process p = new Process(arrivalTime, burst, priority);
-            //System.out.println(p);
-            processList.add(p);
-
-        }
-
-        System.out.println("Generated " + n  + " processes with average BT of " + (double) totalBT/n);
+    public static void Execute(LinkedList<Process> processList) {
+        System.out.println("Generated " + processList.size()  + " processes.");
         BurstSummary(processList);
         ATSummary(processList);
 
         processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
         System.out.println("Solving processes with originally provided methods");
+        Random rand = new Random();
 
         FCFS(new LinkedList<>(processList));
         resetProcesses(processList);
@@ -359,5 +323,71 @@ public class Main {
 
         HighestResponseRatioNext(new LinkedList<>(processList));
         resetProcesses(processList);
+    }
+
+    public static void main(String[] args) {
+        Random rand = new Random();
+        int arrivalTime; int burst; int priority;
+
+        System.out.println("-----TEST CASE 1: 3-5 PROCESSES FOR EASY CHECKING-----");
+        LinkedList<Process> smallTest = new LinkedList<>();
+        int n = rand.nextInt(3)+2;
+        for (int i = 0; i < n; i++) {
+            arrivalTime = rand.nextInt(10)+1;
+            burst = rand.nextInt(10)+1;
+            priority = rand.nextInt(3) + 1;
+            Process p = new Process(arrivalTime, burst, priority);
+            smallTest.add(p);
+        }
+        Execute(smallTest);
+
+        System.out.println("-----TEST CASE 2: LARGER POOL OF PROCESSES WITH RANDOM BT, AT & PRIORITY-----");
+        LinkedList<Process> largeTest = new LinkedList<>();
+        n = rand.nextInt(40)+10;
+        for (int i = 0; i < n; i++) {
+            arrivalTime = rand.nextInt(100)+1;
+            burst = rand.nextInt(25)+1;
+            priority = rand.nextInt(3) + 1;
+            Process p = new Process(arrivalTime, burst, priority);
+            largeTest.add(p);
+        }
+        Execute(largeTest);
+
+        System.out.println("-----TEST CASE 3: 20 PROCESSES WITH SAME RANDOM BT ALL ARRIVE AT T=0-----");
+        LinkedList<Process> sameBTAndAT = new LinkedList<>();
+        burst = rand.nextInt(10)+10;
+        for (int i = 0; i < 20; i++) {
+            Process p = new Process(0, burst, 1);
+            sameBTAndAT.add(p);
+        }
+        Execute(sameBTAndAT);
+
+        System.out.println("-----TEST CASE 4: 20 PROCESSES WITH 10 SHORT BURSTS AND 10 VERY LONG BURSTS-----");
+        LinkedList<Process> longAndShort = new LinkedList<>();
+        for (int i = 0; i < 20; i++) {
+            if (i < n/2) {
+                burst = rand.nextInt(25)+75;
+            } else {
+                burst = rand.nextInt(10);
+            }
+            arrivalTime = rand.nextInt(100)+1;
+            priority = rand.nextInt(3) + 1;
+            Process p = new Process(arrivalTime, burst, priority);
+            longAndShort.add(p);
+        }
+        Execute(longAndShort);
+
+        /*
+        System.out.println("-----TEST CASE 5: EXTREMELY WIDE RANGE IN PRIORITIES-----");
+        LinkedList<Process> priorityChaos = new LinkedList<>();
+        for (int i = 0; i < 20; i++) {
+            arrivalTime = rand.nextInt(100)+1;
+            burst = rand.nextInt(25)+1;
+            priority = rand.nextInt(25) + 1;
+            Process p = new Process(arrivalTime, burst, priority);
+            priorityChaos.add(p);
+        }
+        Execute(priorityChaos);
+         */
     }
 }
