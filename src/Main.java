@@ -3,8 +3,8 @@ import java.util.*;
 
 public class Main {
 
-    public static void FCFS (Queue<Process> processQueue) {
-        System.out.println("FCFS Execution: ");
+    public static double[] FCFS (Queue<Process> processQueue) {
+        //System.out.println("FCFS Execution: ");
         int time = 0; int totalWT = 0; int totalTAT = 0; int timeWasted = 0;
         int np = processQueue.size();
         while (!processQueue.isEmpty()) {
@@ -22,24 +22,28 @@ public class Main {
             totalWT += current.WT;
             totalTAT += current.TAT;
         }
-        Recap(totalWT, totalTAT,time, timeWasted, np);
+        return Recap(totalWT, totalTAT,time, timeWasted, np);
     }
 
-    public static void SJF (Queue<Process> processQueue) { //non-preemptive SJF algorithm
-        System.out.println("SJF Execution:");
+    public static double[] SJF (Queue<Process> processQueue) { //non-preemptive SJF algorithm
+        //System.out.println("SJF Execution:");
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
+        Queue<Process> readyQueue = new LinkedList<>();
         while (completed < np) {
-            List<Process> availableProcesses = new ArrayList<>();
-            for (Process p  : processQueue) {
-                if (p.arrivalTime <= time && p.remaining > 0) {
-                    availableProcesses.add(p);
-                }
-            }
-            if (!availableProcesses.isEmpty()) {
-                availableProcesses.sort(Comparator.comparingInt(p -> p.burst));
-                Process current = availableProcesses.get(0);
 
+            while (!processQueue.isEmpty() && processQueue.peek().arrivalTime <= time) {
+                readyQueue.add(processQueue.poll());
+            }
+            if (!readyQueue.isEmpty()) {
+                List<Process> sortedList = new ArrayList<>(readyQueue);
+                sortedList.sort(Comparator.comparingInt(p -> p.burst));
+                readyQueue.clear();
+                readyQueue.addAll(sortedList);
+
+                Process current = readyQueue.poll();
+
+                assert current != null;
                 current.WT = time - current.arrivalTime;
                 current.TAT = current.WT + current.burst;
                 totalWT += current.WT;
@@ -56,11 +60,11 @@ public class Main {
                 timeWasted += time - oldTime;
             }
         }
-        Recap(totalWT,totalTAT,time,timeWasted,np);
+        return Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static void Priority (Queue<Process>  processQueue) { //non-preemptive priority scheduling
-        System.out.println("Priority Scheduling Execution:");
+    public static double[] Priority (Queue<Process>  processQueue) { //non-preemptive priority scheduling
+        //System.out.println("Priority Scheduling Execution:");
 
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
@@ -101,12 +105,12 @@ public class Main {
             }
         }
 
-        Recap(totalWT,totalTAT,time,timeWasted,np);
+        return Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static void RoundRobin(Queue<Process> processQueue, int quantum) {
-        System.out.println("Round Robin Execution:");
-        System.out.println("Quantum = " + quantum);
+    public static double[] RoundRobin(Queue<Process> processQueue, int quantum) {
+        //System.out.println("Round Robin Execution:");
+        //System.out.println("Quantum = " + quantum);
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
@@ -153,13 +157,13 @@ public class Main {
             }
         }
 
-        Recap(totalWT,totalTAT,time,timeWasted,np);
+        return Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
     //start of new algorithms
 
-    public static void STRF(Queue<Process> processQueue) {
-        System.out.println("STRF Execution:");
+    public static double[] STRF(Queue<Process> processQueue) {
+        //System.out.println("STRF Execution:");
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
@@ -198,11 +202,11 @@ public class Main {
                 timeWasted++;
             }
         }
-        Recap(totalWT,totalTAT,time,timeWasted,np);
+        return Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static void HighestResponseRatioNext(Queue<Process> processQueue) { //non-preemptive HRRN algorithm
-        System.out.println("Highest Response Ratio Next Execution:");
+    public static double[] HRRF(Queue<Process> processQueue) { //non-preemptive HRRF algorithm
+        //System.out.println("Highest Response Ratio Next Execution:");
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
@@ -247,16 +251,17 @@ public class Main {
             }
         }
 
-        Recap(totalWT,totalTAT,time,timeWasted,np);
+         return Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static void Recap(int totalWT, int totalTAT, int time, int timeWasted, int np) {
+    public static double[] Recap(int totalWT, int totalTAT, int time, int timeWasted, int np) {
         float avgWT = (float) totalWT/np;
         float avgTAT = (float) totalTAT/np;
         float UtilizationPCT = (float) (Math.round(((float) (time - timeWasted) / time) * 100 * 100.0) / 100.0);
         float throughput = (float) np/time;
-        System.out.printf("Avg WT: %.2f -- Avg TAT: %.2f -- Util%%: %.2f -- Throughput: %.4f%n",
-                avgWT, avgTAT, UtilizationPCT, throughput);
+
+        //System.out.printf("Avg WT: %.2f -- Avg TAT: %.2f -- Util%%: %.2f -- Throughput: %.4f%n", avgWT, avgTAT, UtilizationPCT, throughput);
+        return new double[]{avgWT,avgTAT,UtilizationPCT,throughput};
     }
 
     public static void resetProcesses(LinkedList<Process> processList) {
@@ -265,7 +270,7 @@ public class Main {
         }
     }
 
-    public static void BurstSummary(LinkedList<Process> processList) {
+    public static String BurstSummary(LinkedList<Process> processList) {
         processList.sort(Comparator.comparingInt(p -> p.burst));
         int n = processList.size();
         int min = processList.get(0).burst;
@@ -273,13 +278,13 @@ public class Main {
         int med = processList.get(n/2).burst;
         int q3 = processList.get(3*n/4).burst;
         int max = processList.get(n - 1).burst;
-        System.out.printf("""
+        return String.format("""
                 5-Number Summary of Process Bursts:
                 min: %d, q1: %d, med: %d, q3: %d, max: %d
-                """,min, q1, med, q3, max);
+                """, min, q1, med, q3, max);
     }
 
-    public static void ATSummary(LinkedList<Process> processList) {
+    public static String ATSummary(LinkedList<Process> processList) {
         processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
         int n = processList.size();
         int min = processList.get(0).arrivalTime;
@@ -287,41 +292,56 @@ public class Main {
         int med = processList.get(n/2).arrivalTime;
         int q3 = processList.get(3*n/4).arrivalTime;
         int max = processList.get(n - 1).arrivalTime;
-        System.out.printf("""
+        return String.format("""
                 5-Number Summary of Process Arrival Times:
                 min: %d, q1: %d, med: %d, q3: %d, max: %d
                 
                 """,min, q1, med, q3, max);
     }
 
-    public static void Execute(LinkedList<Process> processList) {
-        System.out.println("Generated " + processList.size()  + " processes.");
-        BurstSummary(processList);
-        ATSummary(processList);
-
+    public static void Execute(LinkedList<Process> processList, String fileName) {
+        Random rand = new Random();
+        //System.out.println("Generated " + processList.size()  + " processes.");
         processList.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
-        System.out.println("Solving processes with originally provided methods");
-        Random rand = new Random();
+        CSVWriter writer = new CSVWriter();
+        writer.createFile(fileName, false);
+        String burstSummary = BurstSummary(processList);
+        //writer.write(burstSummary,true);
+        String ATSummary = ATSummary(processList);
+        //writer.write(ATSummary,true);
 
-        FCFS(new LinkedList<>(processList));
+        //System.out.println("Solving processes with originally provided methods");
+        double[] FCFSRecap = FCFS(new LinkedList<>(processList));
+        writer.write("FCFS,",true, false);
+        writer.writeNums(FCFSRecap,true, true);
         resetProcesses(processList);
 
-        SJF(processList);
+        double[] SJFRecap = SJF(new LinkedList<>(processList));
+        writer.write("SJF,",true, false);
+        writer.writeNums(SJFRecap,true, true);
         resetProcesses(processList);
 
         int quantum = rand.nextInt(5) + 5;
-        RoundRobin(new LinkedList<>(processList), quantum);
+        double[] roundRobinRecap = RoundRobin(new LinkedList<>(processList), quantum);
+        writer.write("RoundRobin,",true, false);
+        writer.writeNums(roundRobinRecap,true, true);
         resetProcesses(processList);
 
-        Priority(new LinkedList<>(processList));
+        double[] priorityRecap = Priority(new LinkedList<>(processList));
+        writer.write("Priority,",true, false);
+        writer.writeNums(priorityRecap,true, true);
         resetProcesses(processList);
 
-        System.out.println("\nSolving processes with new methods");
-        STRF(new LinkedList<>(processList));
+        //System.out.println("\nSolving processes with new methods");
+        double[] STRFRecap = STRF(new LinkedList<>(processList));
+        writer.write("STRF,",true, false);
+        writer.writeNums(STRFRecap,true,true);
         resetProcesses(processList);
 
-        HighestResponseRatioNext(new LinkedList<>(processList));
+        double[] HRRFRecap = HRRF(new LinkedList<>(processList));
+        writer.write("HHRF, ",true, false);
+        writer.writeNums(HRRFRecap,true,true);
         resetProcesses(processList);
     }
 
@@ -329,7 +349,7 @@ public class Main {
         Random rand = new Random();
         int arrivalTime; int burst; int priority;
 
-        System.out.println("-----TEST CASE 1: 3-5 PROCESSES FOR EASY CHECKING-----");
+        //System.out.println("-----TEST CASE 1: 3-5 PROCESSES FOR EASY CHECKING-----");
         LinkedList<Process> smallTest = new LinkedList<>();
         int n = rand.nextInt(3)+2;
         for (int i = 0; i < n; i++) {
@@ -339,9 +359,9 @@ public class Main {
             Process p = new Process(arrivalTime, burst, priority);
             smallTest.add(p);
         }
-        Execute(smallTest);
+        Execute(smallTest, "smallTest.csv");
 
-        System.out.println("-----TEST CASE 2: LARGER POOL OF PROCESSES WITH RANDOM BT, AT & PRIORITY-----");
+        //System.out.println("-----TEST CASE 2: LARGER POOL OF PROCESSES WITH RANDOM BT, AT & PRIORITY-----");
         LinkedList<Process> largeTest = new LinkedList<>();
         n = rand.nextInt(40)+10;
         for (int i = 0; i < n; i++) {
@@ -351,18 +371,18 @@ public class Main {
             Process p = new Process(arrivalTime, burst, priority);
             largeTest.add(p);
         }
-        Execute(largeTest);
+        Execute(largeTest, "largeTest.csv");
 
-        System.out.println("-----TEST CASE 3: 20 PROCESSES WITH SAME RANDOM BT ALL ARRIVE AT T=0-----");
+        //System.out.println("-----TEST CASE 3: 20 PROCESSES WITH SAME RANDOM BT ALL ARRIVE AT T=0-----");
         LinkedList<Process> sameBTAndAT = new LinkedList<>();
         burst = rand.nextInt(10)+10;
         for (int i = 0; i < 20; i++) {
             Process p = new Process(0, burst, 1);
             sameBTAndAT.add(p);
         }
-        Execute(sameBTAndAT);
+        Execute(sameBTAndAT, "sameBTAndAT.csv");
 
-        System.out.println("-----TEST CASE 4: 20 PROCESSES WITH 10 SHORT BURSTS AND 10 VERY LONG BURSTS-----");
+        //System.out.println("-----TEST CASE 4: 20 PROCESSES WITH 10 SHORT BURSTS AND 10 VERY LONG BURSTS-----");
         LinkedList<Process> longAndShort = new LinkedList<>();
         for (int i = 0; i < 20; i++) {
             if (i < n/2) {
@@ -375,7 +395,7 @@ public class Main {
             Process p = new Process(arrivalTime, burst, priority);
             longAndShort.add(p);
         }
-        Execute(longAndShort);
+        Execute(longAndShort, "longAndShort.csv");
 
         /*
         System.out.println("-----TEST CASE 5: EXTREMELY WIDE RANGE IN PRIORITIES-----");
