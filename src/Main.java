@@ -340,7 +340,7 @@ public class Main {
         resetProcesses(processList);
 
         double[] HRRFRecap = HRRF(new LinkedList<>(processList));
-        writer.write("HHRF, ",true, false);
+        writer.write("HRRF, ",true, false);
         writer.writeNums(HRRFRecap,true,true);
         resetProcesses(processList);
     }
@@ -349,53 +349,54 @@ public class Main {
         Random rand = new Random();
         int arrivalTime; int burst; int priority;
 
-        //System.out.println("-----TEST CASE 1: 3-5 PROCESSES FOR EASY CHECKING-----");
-        LinkedList<Process> smallTest = new LinkedList<>();
-        int n = rand.nextInt(3)+2;
-        for (int i = 0; i < n; i++) {
-            arrivalTime = rand.nextInt(10)+1;
-            burst = rand.nextInt(10)+1;
-            priority = rand.nextInt(3) + 1;
-            Process p = new Process(arrivalTime, burst, priority);
-            smallTest.add(p);
-        }
-        Execute(smallTest, "smallTest.csv");
-
-        //System.out.println("-----TEST CASE 2: LARGER POOL OF PROCESSES WITH RANDOM BT, AT & PRIORITY-----");
-        LinkedList<Process> largeTest = new LinkedList<>();
-        n = rand.nextInt(40)+10;
-        for (int i = 0; i < n; i++) {
-            arrivalTime = rand.nextInt(100)+1;
-            burst = rand.nextInt(25)+1;
-            priority = rand.nextInt(3) + 1;
-            Process p = new Process(arrivalTime, burst, priority);
-            largeTest.add(p);
-        }
-        Execute(largeTest, "largeTest.csv");
-
-        //System.out.println("-----TEST CASE 3: 20 PROCESSES WITH SAME RANDOM BT ALL ARRIVE AT T=0-----");
-        LinkedList<Process> sameBTAndAT = new LinkedList<>();
-        burst = rand.nextInt(10)+10;
-        for (int i = 0; i < 20; i++) {
-            Process p = new Process(0, burst, 1);
-            sameBTAndAT.add(p);
-        }
-        Execute(sameBTAndAT, "sameBTAndAT.csv");
-
-        //System.out.println("-----TEST CASE 4: 20 PROCESSES WITH 10 SHORT BURSTS AND 10 VERY LONG BURSTS-----");
-        LinkedList<Process> longAndShort = new LinkedList<>();
-        for (int i = 0; i < 20; i++) {
-            if (i < n/2) {
-                burst = rand.nextInt(25)+75;
-            } else {
-                burst = rand.nextInt(10);
+        for (int x = 0; x < 20; x++) {
+            //System.out.println("-----TEST CASE 1: 3-5 PROCESSES FOR EASY CHECKING-----");
+            LinkedList<Process> smallTest = new LinkedList<>();
+            int n = rand.nextInt(3)+2;
+            for (int i = 0; i < n; i++) {
+                arrivalTime = rand.nextInt(10)+1;
+                burst = rand.nextInt(10)+1;
+                priority = rand.nextInt(3) + 1;
+                Process p = new Process(arrivalTime, burst, priority);
+                smallTest.add(p);
             }
-            arrivalTime = rand.nextInt(100)+1;
-            priority = rand.nextInt(3) + 1;
-            Process p = new Process(arrivalTime, burst, priority);
-            longAndShort.add(p);
-        }
-        Execute(longAndShort, "longAndShort.csv");
+            Execute(smallTest, "smallTest.csv");
+
+            //System.out.println("-----TEST CASE 2: LARGER POOL OF PROCESSES WITH RANDOM BT, AT & PRIORITY-----");
+            LinkedList<Process> largeTest = new LinkedList<>();
+            n = rand.nextInt(40)+10;
+            for (int i = 0; i < n; i++) {
+                arrivalTime = rand.nextInt(100)+1;
+                burst = rand.nextInt(25)+1;
+                priority = rand.nextInt(3) + 1;
+                Process p = new Process(arrivalTime, burst, priority);
+                largeTest.add(p);
+            }
+            Execute(largeTest, "largeTest.csv");
+
+            //System.out.println("-----TEST CASE 3: 20 PROCESSES WITH SAME RANDOM BT ALL ARRIVE AT T=0-----");
+            LinkedList<Process> sameBTAndAT = new LinkedList<>();
+            burst = rand.nextInt(10)+10;
+            for (int i = 0; i < 20; i++) {
+                Process p = new Process(0, burst, 1);
+                sameBTAndAT.add(p);
+            }
+            Execute(sameBTAndAT, "sameBTAndAT.csv");
+
+            //System.out.println("-----TEST CASE 4: 20 PROCESSES WITH 10 SHORT BURSTS AND 10 VERY LONG BURSTS-----");
+            LinkedList<Process> longAndShort = new LinkedList<>();
+            for (int i = 0; i < 20; i++) {
+                if (i < n/2) {
+                    burst = rand.nextInt(25)+75;
+                } else {
+                    burst = rand.nextInt(10);
+                }
+                arrivalTime = rand.nextInt(100)+1;
+                priority = rand.nextInt(3) + 1;
+                Process p = new Process(arrivalTime, burst, priority);
+                longAndShort.add(p);
+            }
+            Execute(longAndShort, "longAndShort.csv");
 
         /*
         System.out.println("-----TEST CASE 5: EXTREMELY WIDE RANGE IN PRIORITIES-----");
@@ -409,5 +410,6 @@ public class Main {
         }
         Execute(priorityChaos);
          */
+        }
     }
 }
