@@ -349,6 +349,7 @@ public class Main {
         Random rand = new Random();
         int arrivalTime; int burst; int priority;
 
+        //x = number of simulations run
         for (int x = 0; x < 20; x++) {
             //System.out.println("-----TEST CASE 1: 3-5 PROCESSES FOR EASY CHECKING-----");
             LinkedList<Process> smallTest = new LinkedList<>();
@@ -398,18 +399,21 @@ public class Main {
             }
             Execute(longAndShort, "longAndShort.csv");
 
-        /*
-        System.out.println("-----TEST CASE 5: EXTREMELY WIDE RANGE IN PRIORITIES-----");
-        LinkedList<Process> priorityChaos = new LinkedList<>();
+
+        //System.out.println("-----TEST CASE 5: CONTINUOUS ARRIVAL OF SHRINKING PROCESSES-----");
+        LinkedList<Process> shrinking = new LinkedList<>();
+        int globalBurst = 50;
+        int step;
         for (int i = 0; i < 20; i++) {
-            arrivalTime = rand.nextInt(100)+1;
-            burst = rand.nextInt(25)+1;
-            priority = rand.nextInt(25) + 1;
+            arrivalTime = i + rand.nextInt(1)+1;
+            step = rand.nextInt(3) + 1;
+            burst = Math.max(1, globalBurst - step);
+            globalBurst = burst;
+            priority = rand.nextInt(3) + 1;
             Process p = new Process(arrivalTime, burst, priority);
-            priorityChaos.add(p);
+            shrinking.add(p);
         }
-        Execute(priorityChaos);
-         */
+        Execute(shrinking, "shrinking.csv");
         }
     }
 }
