@@ -1,5 +1,5 @@
 public class Process {
-    public int burst;
+    public final int burst;
     public final int arrivalTime;
     public int remaining;
     public int WT;

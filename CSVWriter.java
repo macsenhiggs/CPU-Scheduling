@@ -15,13 +15,13 @@ public class CSVWriter {
 
         if (replace || !exists) {
             if (exists) {
-                System.out.println("File " + myObj.getName() + " already exists. Replacing.");
+                //System.out.println("File " + myObj.getName() + " already exists. Replacing.");
             } else {
-                System.out.println("File " + myObj.getName() + " created.");
+                //System.out.println("File " + myObj.getName() + " created.");
             }
             write("Method, Avg WT, Avg TAT, Util %, Throughput ", false, true);
         } else {
-            System.out.println("File " + myObj.getName() + " already exists.");
+            //System.out.println("File " + myObj.getName() + " already exists.");
         }
     }
 

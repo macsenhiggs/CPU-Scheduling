@@ -1,6 +1,7 @@
 import java.util.*;
 
 
+@SuppressWarnings("DuplicatedCode")
 public class Main {
 
     public static double[] FCFS (Queue<Process> processQueue) {
@@ -25,7 +26,8 @@ public class Main {
         return Recap(totalWT, totalTAT,time, timeWasted, np);
     }
 
-    public static double[] SJF (Queue<Process> processQueue) { //non-preemptive SJF algorithm
+    public static double[] SJF (Queue<Process> processQueue) {
+        //non-preemptive SJF algorithm
         //System.out.println("SJF Execution:");
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
@@ -63,7 +65,8 @@ public class Main {
         return Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static double[] Priority (Queue<Process>  processQueue) { //non-preemptive priority scheduling
+    public static double[] Priority (Queue<Process>  processQueue) {
+        //non-preemptive priority scheduling
         //System.out.println("Priority Scheduling Execution:");
 
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
@@ -205,8 +208,9 @@ public class Main {
         return Recap(totalWT,totalTAT,time,timeWasted,np);
     }
 
-    public static double[] HRRF(Queue<Process> processQueue) { //non-preemptive HRRF algorithm
-        //System.out.println("Highest Response Ratio Next Execution:");
+    public static double[] HRRF(Queue<Process> processQueue) {
+        //non-preemptive HRRF algorithm
+        //System.out.println("Highest Response Ratio First Execution:");
         int time = 0; int totalWT = 0; int totalTAT = 0; int completed = 0; int timeWasted = 0;
         int np = processQueue.size();
 
@@ -306,10 +310,12 @@ public class Main {
 
         CSVWriter writer = new CSVWriter();
         writer.createFile(fileName, false);
+        /*
         String burstSummary = BurstSummary(processList);
-        //writer.write(burstSummary,true);
+        writer.write(burstSummary,true);
         String ATSummary = ATSummary(processList);
-        //writer.write(ATSummary,true);
+        writer.write(ATSummary,true);
+         */
 
         //System.out.println("Solving processes with originally provided methods");
         double[] FCFSRecap = FCFS(new LinkedList<>(processList));
@@ -350,7 +356,7 @@ public class Main {
         int arrivalTime; int burst; int priority;
 
         //x = number of simulations run
-        for (int x = 0; x < 20; x++) {
+        for (int x = 0; x < 100; x++) {
             //System.out.println("-----TEST CASE 1: 3-5 PROCESSES FOR EASY CHECKING-----");
             LinkedList<Process> smallTest = new LinkedList<>();
             int n = rand.nextInt(3)+2;
@@ -415,5 +421,12 @@ public class Main {
         }
         Execute(shrinking, "shrinking.csv");
         }
+
+        CSVWriter writer = new CSVWriter();
+        System.out.println("View Test 1 Results Here: " + writer.getAbsolutePath("smallTest.csv"));
+        System.out.println("View Test 2 Results Here: " + writer.getAbsolutePath("largeTest.csv"));
+        System.out.println("View Test 3 Results Here: " + writer.getAbsolutePath("sameBTAndAT.csv"));
+        System.out.println("View Test 4 Results Here: " + writer.getAbsolutePath("longAndShort.csv"));
+        System.out.println("View Test 5 Results Here: " + writer.getAbsolutePath("shrinking.csv"));
     }
 }

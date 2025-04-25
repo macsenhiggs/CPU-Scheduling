@@ -5,5 +5,7 @@ public class ResetFiles {
         writer.createFile("largeTest.csv", true);
         writer.createFile("sameBTAndAT.csv", true);
         writer.createFile("longAndShort.csv", true);
+        writer.createFile("shrinking.csv", true);
+        System.out.println("Reset all Files.");
     }
 }
